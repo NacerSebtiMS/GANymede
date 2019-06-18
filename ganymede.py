@@ -236,6 +236,33 @@ def build_WaveGAN_discriminator():
 
 
 # ==============================
-
+    
+# ========== TRAIN ==========
+def train_wavegan(epochs, batch_size, save_interval):
+    
+    # Load dataset
+    
+    # Rescale
+    
+    # Saving repository
+    
+    # Discriminator training
+    
+    # Generator Training
+    
+    return 0
+    
+# ===========================
+    
+# ========== Prediction ==========
+# ================================
+    
+# ========== Loss function ==========
+# ===================================
+    
+# ========== Main ==========
+    
 generator = build_WaveGAN_generator()
 discriminator = build_WaveGAN_discriminator()
+
+# ==========================
