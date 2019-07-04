@@ -1,6 +1,6 @@
 # GANymede
 
-Trying some implementation of GANs for audio in Keras.
+Trying some implementations of GANs for audio in Keras.
 
 ## WaveGAN
 
