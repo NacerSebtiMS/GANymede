@@ -13,7 +13,11 @@ WaveGAN implements a structure that enables working on raw audio.
 - [x] Discriminator structure
 - [x] Loss function : [WGAN-GP](https://arxiv.org/abs/1704.00028)
 - [ ] Train function
-- [ ] Dataset : [Speech Commands](https://arxiv.org/abs/1804.03209)
+- [ ] Datasets : 
+- - [ ] [Speech Commands](https://arxiv.org/abs/1804.03209)
+- - [ ] [Speech Commands Zero through Nine (SC09)](http://deepyeti.ucsd.edu/cdonahue/wavegan/data/sc09.tar.gz). Source : [here](https://github.com/chrisdonahue/wavegan)
+- - [ ] [Drum sound effects](http://deepyeti.ucsd.edu/cdonahue/wavegan/data/drums.tar.gz). Source : [here](https://github.com/chrisdonahue/wavegan)
+- - [ ] [Bach piano performances](http://deepyeti.ucsd.edu/cdonahue/wavegan/data/mancini_piano.tar.gz). Source : [here](https://github.com/chrisdonahue/wavegan)
 
 ## GANSynth
 
