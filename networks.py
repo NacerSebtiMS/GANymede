@@ -41,30 +41,30 @@ def build_WaveGAN_generator(args):
     D_WG256, D_WG16, D_WG8, D_WG4, D_WG2 = 256*D_WG,16*D_WG,8*D_WG,4*D_WG,2*D_WG
 	# Generator structure
     """
-	________________________________________________________
-	Operation 					Kernel Size 	Output Shape
-	________________________________________________________
-	Input z ∼ Uniform(−1; 1) 					(n, 100)
+	_____________________________________________________________
+	Operation 			Kernel Size 	Output Shape
+	_____________________________________________________________
+	Input z ∼ Uniform(−1; 1) 			(n, 100)
 
-	Dense 1 					(100, 256d) 	(n, 256d)
-	Reshape 									(n, 16, 16d)
-	ReLU 										(n, 16, 16d)
+	Dense 1 			(100, 256d) 	(n, 256d)
+	Reshape 					(n, 16, 16d)
+	ReLU 						(n, 16, 16d)
 
 	Trans Conv1D (Stride=4) 	(25, 16d, 8d) 	(n, 64, 8d)
-	ReLU 										(n, 64, 8d)
+	ReLU 						(n, 64, 8d)
 
 	Trans Conv1D (Stride=4) 	(25, 8d, 4d) 	(n, 256, 4d)
-	ReLU 										(n, 256, 4d)
+	ReLU 						(n, 256, 4d)
 
 	Trans Conv1D (Stride=4) 	(25, 4d, 2d) 	(n, 1024, 2d)
-	ReLU 										(n, 1024, 2d)
+	ReLU 						(n, 1024, 2d)
 
 	Trans Conv1D (Stride=4) 	(25, 2d, d) 	(n, 4096, d)
-	ReLU 										(n, 4096, d)
+	ReLU 						(n, 4096, d)
 
-	Trans Conv1D (Stride=4) 	(25, d, c) 		(n, 16384, c)
-	Tanh 										(n, 16384, c)
-	_________________________________________________________
+	Trans Conv1D (Stride=4) 	(25, d, c) 	(n, 16384, c)
+	Tanh 						(n, 16384, c)
+	_____________________________________________________________
     """
     model = Sequential()
     model.add(Dense(D_WG256,input_dim=LATENT_DIM_WG))
@@ -108,32 +108,32 @@ def build_WaveGAN_discriminator(args):
     D_WG256, D_WG16, D_WG8, D_WG4, D_WG2 = 256*D_WG,16*D_WG,8*D_WG,4*D_WG,2*D_WG
 	# Discriminator structure
     """
-	________________________________________________________
-	Operation 					Kernel Size 	Output Shape
-	________________________________________________________
-	Input x or G(z) 							(n, 16384, c)
+	_____________________________________________________________________
+	Operation 				Kernel Size 	Output Shape
+	_____________________________________________________________________
+	Input x or G(z) 					(n, 16384, c)
 
-	Conv1D (Stride=4) 			(25, c, d) 		(n, 4096, d)
-	LReLU (α = 0.2) 							(n, 4096, d)
-	Phase Shuffle (n = 2) 						(n, 4096, d)
+	Conv1D (Stride=4) 			(25, c, d) 	(n, 4096, d)
+	LReLU (α = 0.2) 					(n, 4096, d)
+	Phase Shuffle (n = 2) 					(n, 4096, d)
 
 	Conv1D (Stride=4) 			(25, d, 2d) 	(n, 1024, 2d)
-	LReLU (α = 0.2) 							(n, 1024, 2d)
-	Phase Shuffle (n = 2) 						(n, 1024, 2d)
+	LReLU (α = 0.2) 					(n, 1024, 2d)
+	Phase Shuffle (n = 2) 					(n, 1024, 2d)
 
 	Conv1D (Stride=4) 			(25, 2d, 4d) 	(n, 256, 4d)
-	LReLU (α = 0.2) 							(n, 256, 4d)
-	Phase Shuffle (n = 2) 						(n, 256, 4d)
+	LReLU (α = 0.2) 					(n, 256, 4d)
+	Phase Shuffle (n = 2) 					(n, 256, 4d)
 
 	Conv1D (Stride=4) 			(25, 4d, 8d) 	(n, 64, 8d)
-	LReLU (α = 0.2) 							(n, 64, 8d)
-	Phase Shuffle (n = 2) 						(n, 64, 8d)
+	LReLU (α = 0.2) 					(n, 64, 8d)
+	Phase Shuffle (n = 2) 					(n, 64, 8d)
 
 	Conv1D (Stride=4) 			(25, 8d, 16d) 	(n, 16, 16d)
-	LReLU (α = 0.2) 							(n, 16, 16d)
-	Reshape 									(n, 256d)
-	Dense 						(256d, 1) 		(n, 1)
-	_________________________________________________________
+	LReLU (α = 0.2) 					(n, 16, 16d)
+	Reshape 						(n, 256d)
+	Dense 					(256d, 1) 	(n, 1)
+	_____________________________________________________________________
     """
     phaseshuffle = lambda x : apply_phaseshuffle(x,PHASESHUFFLE_RAD)
     
