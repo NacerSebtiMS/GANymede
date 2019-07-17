@@ -11,7 +11,7 @@ WaveGAN implements a structure that enables working on raw audio.
 ### Advancement
 - [x] Generator structure
 - [x] Discriminator structure
-- [x] Loss function : [WGAN-GP](https://arxiv.org/abs/1704.00028)
+- [ ] Loss function : [WGAN-GP](https://arxiv.org/abs/1704.00028) - (Experimenting some issues)
 - [ ] Train function
 - [x] Datasets : 
 - - [ ] [Speech Commands](https://arxiv.org/abs/1804.03209)

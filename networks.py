@@ -15,6 +15,10 @@ from keras.layers.advanced_activations import LeakyReLU
 from keras.layers.convolutional import UpSampling1D, Conv1D
 # =============================
 
+# ========== Global Variables ==========
+import global_variables_wavegan as gvw
+# ======================================
+
 
 def apply_phaseshuffle(x, rad, pad_type='reflect'):
     # Source : https://github.com/chrisdonahue/wavegan/blob/master/wavegan.py
@@ -36,9 +40,8 @@ def apply_phaseshuffle(x, rad, pad_type='reflect'):
 	# WaveGAN (https://arxiv.org/abs/1802.04208)
 	# Raw audio syntesis
 
-def build_WaveGAN_generator(args):
-    LATENT_DIM_WG,D_WG,STRIDES_WG,KERNEL_WG,C_WG = args
-    D_WG256, D_WG16, D_WG8, D_WG4, D_WG2 = 256*D_WG,16*D_WG,8*D_WG,4*D_WG,2*D_WG
+def build_WaveGAN_generator():
+    #gvw.LATENT_DIM,gvw.D,gvw.STRIDES,gvw.KERNEL,gvw.C = args
 	# Generator structure
     """
 	_____________________________________________________________
@@ -67,45 +70,45 @@ def build_WaveGAN_generator(args):
 	_____________________________________________________________
     """
     model = Sequential()
-    model.add(Dense(D_WG256,input_dim=LATENT_DIM_WG))
-    model.add(Reshape((16,D_WG16)))
+    model.add(Dense(256*gvw.D,input_dim=gvw.LATENT_DIM))
+    model.add(Reshape((16,16*gvw.D)))
     model.add(BatchNormalization())
     model.add(Activation("relu"))
 
-    model.add(UpSampling1D(STRIDES_WG))
-    model.add(Conv1D(D_WG8, kernel_size=KERNEL_WG, padding="same"))
+    model.add(UpSampling1D(gvw.STRIDES))
+    model.add(Conv1D(8*gvw.D, kernel_size=gvw.KERNEL, padding="same"))
     model.add(BatchNormalization())
     model.add(Activation("relu"))
     
-    model.add(UpSampling1D(STRIDES_WG))
-    model.add(Conv1D(D_WG4, kernel_size=KERNEL_WG, padding="same"))
+    model.add(UpSampling1D(gvw.STRIDES))
+    model.add(Conv1D(4*gvw.D, kernel_size=gvw.KERNEL, padding="same"))
     model.add(BatchNormalization())
     model.add(Activation("relu"))
     
-    model.add(UpSampling1D(STRIDES_WG))
-    model.add(Conv1D(D_WG2, kernel_size=KERNEL_WG, padding="same"))
+    model.add(UpSampling1D(gvw.STRIDES))
+    model.add(Conv1D(2*gvw.D, kernel_size=gvw.KERNEL, padding="same"))
     model.add(BatchNormalization())
     model.add(Activation("relu"))
     
-    model.add(UpSampling1D(STRIDES_WG))
-    model.add(Conv1D(D_WG, kernel_size=KERNEL_WG, padding="same"))
+    model.add(UpSampling1D(gvw.STRIDES))
+    model.add(Conv1D(gvw.D, kernel_size=gvw.KERNEL, padding="same"))
     model.add(BatchNormalization())
     model.add(Activation("relu"))
     
-    model.add(UpSampling1D(STRIDES_WG))
-    model.add(Conv1D(C_WG, kernel_size=KERNEL_WG, padding="same"))
+    model.add(UpSampling1D(gvw.STRIDES))
+    model.add(Conv1D(gvw.C, kernel_size=gvw.KERNEL, padding="same"))
     model.add(Activation("tanh"))
     
     model.summary()
     
-    noise = Input(shape=(LATENT_DIM_WG,))
+    noise = Input(shape=(gvw.LATENT_DIM,))
     output = model(noise)
     
     return Model(noise, output)
 
-def build_WaveGAN_discriminator(args):
-    PHASESHUFFLE_RAD,KERNEL_WG,STRIDES_WG,D_WG,C_WG,ALPHA_WG = args
-    D_WG256, D_WG16, D_WG8, D_WG4, D_WG2 = 256*D_WG,16*D_WG,8*D_WG,4*D_WG,2*D_WG
+def build_WaveGAN_discriminator():
+    #gvw.PHASESHUFFLE_RAD,gvw.KERNEL,gvw.STRIDES,gvw.D,gvw.C,gvw.ALPHA_LRELU = args
+    #256*gvw.D, 16*gvw.D, 8*gvw.D, 4*gvw.D, 2*gvw.D = 256*gvw.D,16*gvw.D,8*gvw.D,4*gvw.D,2*gvw.D
 	# Discriminator structure
     """
 	_____________________________________________________________________
@@ -135,39 +138,39 @@ def build_WaveGAN_discriminator(args):
 	Dense 					(256d, 1) 	(n, 1)
 	_____________________________________________________________________
     """
-    phaseshuffle = lambda x : apply_phaseshuffle(x,PHASESHUFFLE_RAD)
+    phaseshuffle = lambda x : apply_phaseshuffle(x,gvw.PHASESHUFFLE_RAD)
     
     model = Sequential()
     
-    model.add(Conv1D(D_WG, kernel_size=KERNEL_WG, strides=STRIDES_WG, input_shape=(D_WG256,C_WG), padding="same"))
+    model.add(Conv1D(gvw.D, kernel_size=gvw.KERNEL, strides=gvw.STRIDES, input_shape=(256*gvw.D,gvw.C), padding="same"))
     model.add(BatchNormalization())
-    model.add(LeakyReLU(alpha=ALPHA_WG))
+    model.add(LeakyReLU(alpha=gvw.ALPHA_LRELU))
     model.add(Lambda(phaseshuffle))
     
-    model.add(Conv1D(D_WG2, kernel_size=KERNEL_WG, strides=STRIDES_WG, padding="same"))
+    model.add(Conv1D(2*gvw.D, kernel_size=gvw.KERNEL, strides=gvw.STRIDES, padding="same"))
     model.add(BatchNormalization())
-    model.add(LeakyReLU(alpha=ALPHA_WG))
+    model.add(LeakyReLU(alpha=gvw.ALPHA_LRELU))
     model.add(Lambda(phaseshuffle))
     
-    model.add(Conv1D(D_WG4, kernel_size=KERNEL_WG, strides=STRIDES_WG, padding="same"))
+    model.add(Conv1D(4*gvw.D, kernel_size=gvw.KERNEL, strides=gvw.STRIDES, padding="same"))
     model.add(BatchNormalization())
-    model.add(LeakyReLU(alpha=ALPHA_WG))
+    model.add(LeakyReLU(alpha=gvw.ALPHA_LRELU))
     model.add(Lambda(phaseshuffle))
     
-    model.add(Conv1D(D_WG8, kernel_size=KERNEL_WG, strides=STRIDES_WG, padding="same"))
+    model.add(Conv1D(8*gvw.D, kernel_size=gvw.KERNEL, strides=gvw.STRIDES, padding="same"))
     model.add(BatchNormalization())
-    model.add(LeakyReLU(alpha=ALPHA_WG))
+    model.add(LeakyReLU(alpha=gvw.ALPHA_LRELU))
     model.add(Lambda(phaseshuffle))
     
-    model.add(Conv1D(D_WG16, kernel_size=KERNEL_WG, strides=STRIDES_WG, padding="same"))
+    model.add(Conv1D(16*gvw.D, kernel_size=gvw.KERNEL, strides=gvw.STRIDES, padding="same"))
     model.add(BatchNormalization())
-    model.add(LeakyReLU(alpha=ALPHA_WG))
+    model.add(LeakyReLU(alpha=gvw.ALPHA_LRELU))
     model.add(Flatten())
     model.add(Dense(1,activation='sigmoid'))
     
     model.summary()
 
-    inp = Input(shape=(D_WG256,C_WG,))
+    inp = Input(shape=(256*gvw.D,gvw.C,))
     validity = model(inp)
     
     return Model(inp,validity)

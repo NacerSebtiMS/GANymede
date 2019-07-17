@@ -15,10 +15,9 @@ from keras.layers.merge import _Merge
 from functools import partial
 # =============================
 
-# ========== Files ==========
-#from ganymede import BATCH_SIZE
-BATCH_SIZE=64
-# ===========================
+# ========== Global Variables ==========
+import global_variables_wavegan as gvw
+# ======================================
 
 
 # ========== Loss function ==========
@@ -29,7 +28,7 @@ class RandomWeightedAverage(_Merge):
     think of. Improvements appreciated."""
 
     def _merge_function(self, inputs):
-        weights = K.random_uniform((BATCH_SIZE, 1, 1, 1))
+        weights = K.random_uniform((gvw.BATCH_SIZE, 1, 1, 1))
         return (weights * inputs[0]) + ((1 - weights) * inputs[1])
     
 def _compute_gradients(tensor, var_list):
@@ -60,12 +59,11 @@ def gradient_penalty_loss(y_true, y_pred, averaged_samples,gradient_penalty_weig
     # return the mean as loss over all the batch samples
     return K.mean(gradient_penalty)
 
-def partial_gp_loss(args):
-    train_size, generated_samples_size, GRADIENT_PENALTY_WEIGHT = args
-    real_samples = Input(shape=train_size)
-    generated_samples = Input(shape=(generated_samples_size,))
+def partial_gp_loss():
+    real_samples = Input(shape=gvw.NOISE_SIZE)
+    generated_samples = Input(shape=(gvw.GP_SIZE2,))
     averaged_samples = RandomWeightedAverage()([real_samples,generated_samples])
-    partial_gp_loss = partial(gradient_penalty_loss, averaged_samples=averaged_samples,gradient_penalty_weight=GRADIENT_PENALTY_WEIGHT)
+    partial_gp_loss = partial(gradient_penalty_loss, averaged_samples=averaged_samples,gradient_penalty_weight=gvw.GRADIENT_PENALTY_WEIGHT)
     partial_gp_loss.__name__ = 'gradient_penalty_loss'
     return partial_gp_loss
 # ===================================
