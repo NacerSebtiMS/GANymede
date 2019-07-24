@@ -5,13 +5,20 @@ Created on Tue Jul 16 22:32:11 2019
 @author: sebn3001
 """
 import tensorflow as tf
+from os import listdir
+from os.path import isfile, join
+
+# ========== Functions ==========
+def extract_all_files(path):
+    return [path+f for f in listdir(path) if isfile(join(path, f))]
+# ===============================
 
 # ========== Variables ==========
 
 	# Tuning training
-EPOCH = 700
-SAVE_INTERVAL = 50
-BATCH_SIZE = 32
+EPOCH = 700	# 700 Epochs for the SC09 dataset and 300 for sound datasets
+BATCH_SIZE = 64
+SHOW_SUMMURY = False # Put to True to be able to print the keras summury of the discriminator and the generator
 
 	# === WaveGAN Variables ===
 N = 64 				# Batch size
@@ -28,8 +35,8 @@ NOISE = tf.random_uniform([BATCH_SIZE, LATENT_DIM], -1., 1., dtype=tf.float32)
 
         # Decode input parameters
         
-SLICE_LEN = 8192 			# Length of the sliceuences in samples or feature timesteps
-DECODE_FS = 0 				# (Re-)sample rate for decoded audio files
+SLICE_LEN = 16384 			# Length of the sliceuences in samples or feature timesteps
+DECODE_FS = 16000			# (Re-)sample rate for decoded audio files
 DECODE_NUM_CHANNELS = 1 	# Number of channels for decoded audio files
 DECODE_FAST_WAV = True 		# Using Spicy instead of Librosa for faster training
 
@@ -47,22 +54,16 @@ GRADIENT_PENALTY_WEIGHT = 10
 	# =========================
 
 	# Saving Paths
+SAVE_INTERVAL = 50
 VERSION = '1.0'
-MODEL_PATH = './models'
-DATASET_PATH_DRUMS = './dataset/drums/train'
-DATASET_PATH_PIANO = './dataset/piano/train'
-DATASET_PATH_SC09 = './dataset/sc09/train'
-FPS = [DATASET_PATH_DRUMS, DATASET_PATH_PIANO, DATASET_PATH_SC09]
-#TRAIN_GENERATION_PATH = './generated/training'
-#PREDICT_PATH = './generated/predict'
+MODEL_PATH = './models/' + VERSION + '/'
+GENERATION_PATH = './generated/' + VERSION + '/'
+PREDICTION_PATH = GENERATION_PATH + 'predicted/'
+
+DATASET_PATH_DRUMS = './dataset/drums/train/'
+DATASET_PATH_PIANO = './dataset/piano/train/'
+DATASET_PATH_SC09 = './dataset/sc09/train/'
+
+FPS = extract_all_files(DATASET_PATH_SC09)
 
 # ===============================
-
-# ========== Packing Vars ==========
-
-# WaveGAN
-#GENERATOR_INPUT_WG = [LATENT_DIM_WG,D_WG,STRIDES_WG,KERNEL_WG,C_WG]
-#DISCRIMINATOR_INPUT_WG = [PHASESHUFFLE_RAD,KERNEL_WG,STRIDES_WG,D_WG,C_WG,ALPHA_WG]
-#TRAIN_INPUT_WG = [EPOCH,SAVE_INTERVAL,BATCH_SIZE, FPS, SLICE_LEN, DECODE_FS, DECODE_NUM_CHANNELS, DECODE_FAST_WAV, LATENT_DIM_WG]
-#GP_INPUT_WG = [NOISE_SIZE,SIZE2,GRADIENT_PENALTY_WEIGHT]
-# ================================== 

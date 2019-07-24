@@ -8,23 +8,21 @@ Created on Thu Jul 11 21:34:55 2019
 # ========== Libraries ==========
 import tensorflow as tf
 
-#import numpy as np
+import numpy as np
 
-#import matplotlib.pyplot as plt
+from keras.models import Model, load_model
+from keras.layers import Input
+from keras.optimizers import Adam
 
-#import sys,os,shutil
+from scipy.io import wavfile
 
-#from keras.models import Sequential, Model#, load_model
-#from keras.layers import Input, Dense, Reshape, Flatten, Lambda
-#from keras.layers import BatchNormalization, Activation
-#from keras.layers.advanced_activations import LeakyReLU
-#from keras.layers.convolutional import UpSampling1D, Conv1D
-#from keras.optimizers import Adam
+import datetime
 # =============================
 
 # ========== Files ==========
 from networks import build_WaveGAN_generator, build_WaveGAN_discriminator
-from loader import decode_extract_and_batch
+#from loader import decode_extract_and_batch
+from load import load_dataset, batch
 #from gp_loss import partial_gp_loss
 # ===========================
 
@@ -32,81 +30,123 @@ from loader import decode_extract_and_batch
 import global_variables_wavegan as gvw
 # ======================================
 
+def save_audio(audio,path):
+    audio = audio * (pow(2,16)/2)
+    wavfile.write(path,gvw.DECODE_FS,audio.astype("int16"))
+    
+def numb(n):
+    if n < 10 : return "0"+str(n)
+    else : return str(n)
+
 # ========== WaveGAN ==========
 def train_wavegan():
     # Load dataset
-    x = decode_extract_and_batch(
+    """
+    data = decode_extract_and_batch(
             fps=gvw.FPS,
             batch_size=gvw.BATCH_SIZE,
             slice_len=gvw.SLICE_LEN,
             decode_fs=gvw.DECODE_FS,
             decode_num_channels=gvw.DECODE_NUM_CHANNELS,
-            decode_fast_wav=gvw.DECODE_FAST_WAV)
-    
-    
+            decode_fast_wav=gvw.DECODE_FAST_WAV)[:,:,0]
+    """
+    x = load_dataset()
+    # Make generator
+    generator = build_WaveGAN_generator()
+    print("Successfully builded generator")
     
     # Make z vector
-    z = tf.random_uniform([gvw.BATCH_SIZE, gvw.LATENT_DIM], -1., 1., dtype=tf.float32)
-    
-    # Make generator
-    
-    # Print G summary
-    
-    # Summarize
-    
-    # Make real discriminator
-    
-    # Print D summary
-    
-    # Make fake discriminator
-    
-    # Create loss
-    
-    # Create (recommended) optimizer
-    
-    # Create training ops
-    
-    # Run training
-    
-    """
-    # Create the optimizer
-    optimizer = Adam(ALPHA_A_WG,beta_1=BETA1_A_WG,beta_2=BETA2_A_WG)
-    
-    # Build the loss function
-    gradient_penalty_loss = partial_gp_loss(GP_INPUT_WG)
-    
-    # Build and compile the discriminator    
-    discriminator = net.build_WaveGAN_discriminator(DISCRIMINATOR_INPUT_WG)
-    discriminator.compile(loss='binary_crossentropy',optimizer=optimizer,metrcis=['accuracy'])
-    
-    # Build generator
-    generator = net.build_WaveGAN_generator(GENERATOR_INPUT_WG)
-    
-    # Make z vector and input it to the generator
-    #z = tf.random_uniform([BATCH_SIZE, LATENT_DIM_WG], -1., 1., dtype=tf.float32)
-    z = Input(shape=(LATENT_DIM_WG,))
+    z = Input(shape=(gvw.LATENT_DIM,))
     output = generator(z)
+    print("Output generated")
     
+    # Create optimizer
+    optimizer = Adam(gvw.ALPHA_ADAM,beta_1=gvw.BETA1_ADAM,beta_2=gvw.BETA2_ADAM)
+    
+    # Make and compile discriminator
+    discriminator = build_WaveGAN_discriminator()
     # For the combined model we will only train the generator
     discriminator.trainable = False
+    discriminator.compile(loss='binary_crossentropy',optimizer=optimizer,metrics=['accuracy'])
+    print("Successfully builded discriminator")
     
     # The discriminator takes generated images as input and determines validity
-    valid = discriminator(output)
+    okay = discriminator(output)
     
     # The combined model  (stacked generator and discriminator)
     # Trains the generator to fool the discriminator
-    combined = Model(z, valid)
-    combined.compile(loss='binary_crossentropy', optimizer=optimizer)
-    """
+    combined = Model(z, okay)
+    combined.compile(loss='binary_crossentropy', optimizer=optimizer)  
+    print("Successfully builded combined model")
     
+    okay = np.ones((gvw.BATCH_SIZE, 1))
+    fake = np.zeros((gvw.BATCH_SIZE, 1))
     
- 
+    # Run training
+    for epoch in range(gvw.EPOCH) :
+        if epoch == 1 : 
+            t0 = datetime.datetime.now()
+            t_temp = t0
+        
+        
+        # ========== Discriminator training ==========
+        
+        # Batch audio
+        audio = batch(x)
+        
+        # Sample noise and generate audio
+        print("# =======",epoch,"======= #")
+        noise = tf.random_uniform([gvw.BATCH_SIZE, gvw.LATENT_DIM], -1., 1., dtype=tf.float32).eval(session=tf.Session())
+        gen_audio = generator.predict(noise)
+        print("Predicted noise")
+        
+        # Train discriminator
+        d_loss_okay = discriminator.train_on_batch(audio, okay)
+        print("Successfully trained okay loss")
+        d_loss_fake = discriminator.train_on_batch(gen_audio, fake)
+        print("Successfully trained fake loss")
+        d_loss = 0.5 * np.add(d_loss_okay, d_loss_fake)
+        
+        # ============================================
+        
+        # ========== Generator training ==========
+        
+        # Train the generator (wants discriminator to mistake images as real)
+        g_loss = combined.train_on_batch(noise, okay)
+        print("Successfully trained combined model")
+        
+        # ========================================
+        
+        # Plot the progress
+        print ("%d [D loss: %f, acc.: %.2f%%] [G loss: %f] - %.2f%%" % (epoch, d_loss[0], 100*d_loss[1], g_loss, 100*epoch/gvw.EPOCH))
+        if epoch > 0 :
+            
+            t = datetime.datetime.now()
+            remaining = (gvw.EPOCH - epoch -1) * (t-t0) / (epoch)
+            h = remaining.seconds // 3600
+            m = (remaining.seconds - h*3600) // 60
+            s = remaining.seconds - h*3600 - m*60
+            print("Epoch executed in %.2fs" % ((t-t_temp).total_seconds()) )
+            print("Remaining time ",end="")
+            if h > 0 : print(h,"h",sep ="",end=" ")
+            if m > 0 : print(m,"m",sep ="",end=" ")
+            if s > 0 : print(s,"s",sep ="",end=" ")
+            print("")
+            t_temp = t
+        
+        if (epoch+1) % gvw.SAVE_INTERVAL == 0 :
+            for i in range(gen_audio.shape[0]) :
+                path1 = gvw.GENERATION_PATH+  "EPOCH_" +str(epoch+1)+"/"+ str(epoch+1) + "-" + numb(i) + '.wav' 
+                save_audio(gen_audio[i,:,0],path1)
+            path2 = gvw.MODEL_PATH+"generator_"+str(epoch+1)+".h5"
+            generator.save(path2)
+            print("Successfully saved generated sample and generator model")
     
-# ______________________________
-    # Saving repository
-    
-    # Discriminator training
-    
-    # Generator Training
-    
+def predict_wavegan(epoch=gvw.EPOCH):
+    generator = load_model(gvw.MODEL_PATH+"generator_"+str(epoch)+".h5")
+    noise = tf.random_uniform([gvw.BATCH_SIZE, gvw.LATENT_DIM], -1., 1., dtype=tf.float32).eval(session=tf.Session())
+    prediction = generator.predict(noise)
+    for i in range(prediction.shape[0]) :
+        path = gvw.PREDICTION_PATH + str(epoch) + "-" + numb(i) + ".wav" 
+        save_audio(prediction[i,:,0],path)
 # =============================

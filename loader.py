@@ -23,6 +23,7 @@ def decode_audio(fp, fs=None, num_channels=1, normalize=False, fast_wav=False):
   if fast_wav:
     # Read with scipy wavread (fast).
     _fs, _wav = wavread(fp)
+    fs = _fs # Enforcing to keep the same sample rate
     if fs is not None and fs != _fs:
       raise NotImplementedError('Scipy cannot resample audio.')
     if _wav.dtype == np.int16:
@@ -196,5 +197,19 @@ def decode_extract_and_batch(
 
   # Get tensors
   iterator = dataset.make_one_shot_iterator()
+  """
+  tsugi = iterator.get_next()
   
+  sess = tf.Session()
+  
+  res = list()
+  with tf.Session() as sess :
+    try :
+      while True:
+        res.append(sess.run(tsugi))
+    except tf.errors.OutOfRangeError:
+      pass
+  return res
+  """
   return iterator.get_next()
+  

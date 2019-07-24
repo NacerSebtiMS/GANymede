@@ -99,7 +99,7 @@ def build_WaveGAN_generator():
     model.add(Conv1D(gvw.C, kernel_size=gvw.KERNEL, padding="same"))
     model.add(Activation("tanh"))
     
-    model.summary()
+    if gvw.SHOW_SUMMURY : model.summary()
     
     noise = Input(shape=(gvw.LATENT_DIM,))
     output = model(noise)
@@ -166,9 +166,10 @@ def build_WaveGAN_discriminator():
     model.add(BatchNormalization())
     model.add(LeakyReLU(alpha=gvw.ALPHA_LRELU))
     model.add(Flatten())
-    model.add(Dense(1,activation='sigmoid'))
+    #model.add(Dense(1,activation='sigmoid'))
+    model.add(Dense(1))
     
-    model.summary()
+    if gvw.SHOW_SUMMURY : model.summary()
 
     inp = Input(shape=(256*gvw.D,gvw.C,))
     validity = model(inp)

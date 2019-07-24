@@ -2,8 +2,10 @@
 
 useless_utils.py
 dataset/
-#generated/
-#models/
+generated/
+models/
+
+*.ipynb
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
