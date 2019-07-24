@@ -12,11 +12,20 @@ from os.path import isfile, join
 def extract_all_files(path):
     return [path+f for f in listdir(path) if isfile(join(path, f))]
 # ===============================
+    
+# ========== Choosing Data set ==========
+#DATASET = "DRUM"
+#DATASET = "PIANO"
+DATASET = "SC09"
+# =======================================
 
 # ========== Variables ==========
 
 	# Tuning training
-EPOCH = 700	# 700 Epochs for the SC09 dataset and 300 for sound datasets
+    
+# 700 Epochs for the SC09 dataset and 300 for sound datasets
+EPOCH = (700 if DATASET == "SC09" else 300)
+#EPOCH =  # Custom value
 BATCH_SIZE = 64
 SHOW_SUMMURY = False # Put to True to be able to print the keras summury of the discriminator and the generator
 
@@ -31,7 +40,7 @@ KERNEL = 25			# Kernel size
 
 PHASESHUFFLE_RAD = 2    # Phase shuffle that randomize phase of each channel
 
-NOISE = tf.random_uniform([BATCH_SIZE, LATENT_DIM], -1., 1., dtype=tf.float32)
+NOISE = tf.random_uniform([BATCH_SIZE, LATENT_DIM], -1., 1., dtype=tf.float32).eval(session=tf.Session())
 
         # Decode input parameters
         
@@ -55,15 +64,20 @@ GRADIENT_PENALTY_WEIGHT = 10
 
 	# Saving Paths
 SAVE_INTERVAL = 50
-VERSION = '1.0'
-MODEL_PATH = './models/' + VERSION + '/'
-GENERATION_PATH = './generated/' + VERSION + '/'
-PREDICTION_PATH = GENERATION_PATH + 'predicted/'
 
 DATASET_PATH_DRUMS = './dataset/drums/train/'
 DATASET_PATH_PIANO = './dataset/piano/train/'
 DATASET_PATH_SC09 = './dataset/sc09/train/'
 
-FPS = extract_all_files(DATASET_PATH_SC09)
+DATASETS = [DATASET_PATH_DRUMS,DATASET_PATH_PIANO,DATASET_PATH_SC09]
+
+VERSION = '1.0_' + DATASET + '.' + BATCH_SIZE 
+MODEL_PATH = './models/' + VERSION + '/'
+GENERATION_PATH = './generated/' + VERSION + '/'
+PREDICTION_PATH = GENERATION_PATH + 'predicted/'
+
+if DATASET == "DRUM" : FPS = extract_all_files(DATASET_PATH_DRUMS)
+elif DATASET == "PIANO" : FPS = extract_all_files(DATASET_PATH_PIANO)
+else : FPS = extract_all_files(DATASET_PATH_SC09)
 
 # ===============================

@@ -16,6 +16,8 @@ from keras.optimizers import Adam
 
 from scipy.io import wavfile
 
+import os,shutil
+
 import datetime
 # =============================
 
@@ -38,8 +40,18 @@ def numb(n):
     if n < 10 : return "0"+str(n)
     else : return str(n)
 
+def manage_file(path):
+    if os.path.isdir(path): shutil.rmtree(path)
+    os.makedirs(path)
+
 # ========== WaveGAN ==========
 def train_wavegan():
+    
+    # Create directories
+    manage_file(gvw.GENERATION_PATH)
+    for i in range(gvw.SAVE_INTERVAL,gvw.EPOCH+1,gvw.SAVE_INTERVAL) : manage_file(gvw.GENERATION_PATH+ "EPOCH_" +str(i)+"/")
+    manage_file(gvw.MODEL_PATH)
+    
     # Load dataset
     """
     data = decode_extract_and_batch(
@@ -142,11 +154,18 @@ def train_wavegan():
             generator.save(path2)
             print("Successfully saved generated sample and generator model")
     
-def predict_wavegan(epoch=gvw.EPOCH):
+def predict_wavegan(same_noise=False,epoch=gvw.EPOCH):
+    directory = gvw.PREDICTION_PATH+ "EPOCH_" +str(epoch)+"/"
+    manage_file(directory)
+    
     generator = load_model(gvw.MODEL_PATH+"generator_"+str(epoch)+".h5")
-    noise = tf.random_uniform([gvw.BATCH_SIZE, gvw.LATENT_DIM], -1., 1., dtype=tf.float32).eval(session=tf.Session())
+    if same_noise : noise = tf.random_uniform([gvw.BATCH_SIZE, gvw.LATENT_DIM], -1., 1., dtype=tf.float32).eval(session=tf.Session())
+    else : noise = gvw.NOISE
     prediction = generator.predict(noise)
     for i in range(prediction.shape[0]) :
-        path = gvw.PREDICTION_PATH + str(epoch) + "-" + numb(i) + ".wav" 
+        filename = str(epoch) + "-" + numb(i) + ".wav"
+        path = directory +  filename
         save_audio(prediction[i,:,0],path)
+        print("Saved %s" % (filename) )
+    print("Successfully generated %s samples with epoch's %s generator" % (prediction.shape[0], epoch) )
 # =============================
