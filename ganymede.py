@@ -19,10 +19,10 @@ import global_variables_wavegan as gvw
 # ========== Activators ==========
 
 	# Train models
-TRAIN = False
+TRAIN = True
 
 	# Predict using the last generator
-PREDICT = True
+PREDICT = False
 
 	# Predict using the same noise
 PREDICT_SAME_NOISE = True

@@ -14,9 +14,9 @@ def extract_all_files(path):
 # ===============================
     
 # ========== Choosing Data set ==========
-#DATASET = "DRUM"
+DATASET = "DRUM"
 #DATASET = "PIANO"
-DATASET = "SC09"
+#DATASET = "SC09"
 # =======================================
 
 # ========== Variables ==========
@@ -24,8 +24,8 @@ DATASET = "SC09"
 	# Tuning training
     
 # 700 Epochs for the SC09 dataset and 300 for sound datasets
-EPOCH = (700 if DATASET == "SC09" else 300)
-#EPOCH =  # Custom value
+#EPOCH = (700 if DATASET == "SC09" else 300)
+EPOCH = 700 # Custom value
 BATCH_SIZE = 64
 SHOW_SUMMURY = False # Put to True to be able to print the keras summury of the discriminator and the generator
 
@@ -55,7 +55,9 @@ BETA1_ADAM = 0.5
 BETA2_ADAM = 0.9
 
         # GP Loss parameters
-        
+#LOSS = 'wgan-gp'
+LOSS = 'binary_crossentropy'
+     
 NOISE_SIZE = NOISE.shape[1:]
 GP_SIZE2 = 100
 GRADIENT_PENALTY_WEIGHT = 10
@@ -71,7 +73,7 @@ DATASET_PATH_SC09 = './dataset/sc09/train/'
 
 DATASETS = [DATASET_PATH_DRUMS,DATASET_PATH_PIANO,DATASET_PATH_SC09]
 
-VERSION = '1.0_' + DATASET + '.' + BATCH_SIZE 
+VERSION = '1.0_' + DATASET + '.' + str(BATCH_SIZE) + "-" + LOSS
 MODEL_PATH = './models/' + VERSION + '/'
 GENERATION_PATH = './generated/' + VERSION + '/'
 PREDICTION_PATH = GENERATION_PATH + 'predicted/'

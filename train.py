@@ -25,7 +25,7 @@ import datetime
 from networks import build_WaveGAN_generator, build_WaveGAN_discriminator
 #from loader import decode_extract_and_batch
 from load import load_dataset, batch
-#from gp_loss import partial_gp_loss
+from gp_loss import partial_gp_loss
 # ===========================
 
 # ========== Global Variables ==========
@@ -45,13 +45,7 @@ def manage_file(path):
     os.makedirs(path)
 
 # ========== WaveGAN ==========
-def train_wavegan():
-    
-    # Create directories
-    manage_file(gvw.GENERATION_PATH)
-    for i in range(gvw.SAVE_INTERVAL,gvw.EPOCH+1,gvw.SAVE_INTERVAL) : manage_file(gvw.GENERATION_PATH+ "EPOCH_" +str(i)+"/")
-    manage_file(gvw.MODEL_PATH)
-    
+def train_wavegan():    
     # Load dataset
     """
     data = decode_extract_and_batch(
@@ -61,7 +55,7 @@ def train_wavegan():
             decode_fs=gvw.DECODE_FS,
             decode_num_channels=gvw.DECODE_NUM_CHANNELS,
             decode_fast_wav=gvw.DECODE_FAST_WAV)[:,:,0]
-    """
+    """    
     x = load_dataset()
     # Make generator
     generator = build_WaveGAN_generator()
@@ -75,11 +69,18 @@ def train_wavegan():
     # Create optimizer
     optimizer = Adam(gvw.ALPHA_ADAM,beta_1=gvw.BETA1_ADAM,beta_2=gvw.BETA2_ADAM)
     
+    # Init loss
+    if gvw.LOSS == "wgan-gp" :
+        # Init WGAN-GP loss
+        loss = partial_gp_loss
+        loss.__name__ = 'gradient_penalty_loss'
+    else : loss = gvw.LOSS
+    
     # Make and compile discriminator
     discriminator = build_WaveGAN_discriminator()
     # For the combined model we will only train the generator
     discriminator.trainable = False
-    discriminator.compile(loss='binary_crossentropy',optimizer=optimizer,metrics=['accuracy'])
+    discriminator.compile(loss=loss,optimizer=optimizer,metrics=['accuracy'])
     print("Successfully builded discriminator")
     
     # The discriminator takes generated images as input and determines validity
@@ -88,11 +89,16 @@ def train_wavegan():
     # The combined model  (stacked generator and discriminator)
     # Trains the generator to fool the discriminator
     combined = Model(z, okay)
-    combined.compile(loss='binary_crossentropy', optimizer=optimizer)  
+    combined.compile(loss=loss, optimizer=optimizer)  
     print("Successfully builded combined model")
     
     okay = np.ones((gvw.BATCH_SIZE, 1))
     fake = np.zeros((gvw.BATCH_SIZE, 1))
+    
+    # Create directories
+    manage_file(gvw.GENERATION_PATH)
+    for i in range(gvw.SAVE_INTERVAL,gvw.EPOCH+1,gvw.SAVE_INTERVAL) : manage_file(gvw.GENERATION_PATH+ "EPOCH_" +str(i)+"/")
+    manage_file(gvw.MODEL_PATH)
     
     # Run training
     for epoch in range(gvw.EPOCH) :
@@ -154,14 +160,14 @@ def train_wavegan():
             generator.save(path2)
             print("Successfully saved generated sample and generator model")
     
-def predict_wavegan(same_noise=False,epoch=gvw.EPOCH):
-    directory = gvw.PREDICTION_PATH+ "EPOCH_" +str(epoch)+"/"
-    manage_file(directory)
-    
+def predict_wavegan(same_noise=False,epoch=gvw.EPOCH):    
     generator = load_model(gvw.MODEL_PATH+"generator_"+str(epoch)+".h5")
     if same_noise : noise = tf.random_uniform([gvw.BATCH_SIZE, gvw.LATENT_DIM], -1., 1., dtype=tf.float32).eval(session=tf.Session())
     else : noise = gvw.NOISE
     prediction = generator.predict(noise)
+    
+    directory = gvw.PREDICTION_PATH+ "EPOCH_" +str(epoch)+"/"
+    manage_file(directory)
     for i in range(prediction.shape[0]) :
         filename = str(epoch) + "-" + numb(i) + ".wav"
         path = directory +  filename

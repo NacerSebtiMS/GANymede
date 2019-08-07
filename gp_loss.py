@@ -33,7 +33,9 @@ class RandomWeightedAverage(_Merge):
     
 def _compute_gradients(tensor, var_list):
     grads = tf.gradients(tensor, var_list)
-    return [grad if grad is not None else tf.zeros_like(var) for var, grad in zip(var_list, grads)]
+    print(type(grads))
+    print(type(var_list))
+    return [grad if grad is not None else tf.zeros_like(var) for var, grad in tf.map_fn(zip,(var_list, grads))]
 
 def gradient_penalty_loss(y_true, y_pred, averaged_samples,gradient_penalty_weight):
     # Source : https://github.com/keras-team/keras-contrib/blob/master/examples/improved_wgan.py 
@@ -59,11 +61,10 @@ def gradient_penalty_loss(y_true, y_pred, averaged_samples,gradient_penalty_weig
     # return the mean as loss over all the batch samples
     return K.mean(gradient_penalty)
 
-def partial_gp_loss():
+def partial_gp_loss(y_true,y_pred):
     real_samples = Input(shape=gvw.NOISE_SIZE)
     generated_samples = Input(shape=(gvw.GP_SIZE2,))
     averaged_samples = RandomWeightedAverage()([real_samples,generated_samples])
-    partial_gp_loss = partial(gradient_penalty_loss, averaged_samples=averaged_samples,gradient_penalty_weight=gvw.GRADIENT_PENALTY_WEIGHT)
-    partial_gp_loss.__name__ = 'gradient_penalty_loss'
-    return partial_gp_loss
+    gp_loss = partial(gradient_penalty_loss, averaged_samples=averaged_samples,gradient_penalty_weight=gvw.GRADIENT_PENALTY_WEIGHT)
+    return gp_loss(y_true,y_pred)
 # ===================================
