@@ -12,7 +12,7 @@ WaveGAN implements a structure that enables working on raw audio.
 - [x] Generator structure
 - [x] Discriminator structure
 - [ ] Loss function : [WGAN-GP](https://arxiv.org/abs/1704.00028) - (Experimenting some issues)
-- [ ] Train function
+- [x] Train function
 - [x] Datasets : 
 - - [ ] [Speech Commands](https://arxiv.org/abs/1804.03209)
 - - [x] [Speech Commands Zero through Nine (SC09)](http://deepyeti.ucsd.edu/cdonahue/wavegan/data/sc09.tar.gz). Source : [here](https://github.com/chrisdonahue/wavegan)
